@@ -1,18 +1,32 @@
 package com.mmendoza.race_condition;
 
-public class Main {
-    public static void main(String[] args) {
-        Counter counter = new Counter();
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
-        Task task = new Task(counter);
+public class Main {
+    public static void main(String[] args) throws InterruptedException {
+
+        Counter counter = new Counter();
+        ExecutorService executor = Executors.newFixedThreadPool(1000);
+
+        long inicio = System.currentTimeMillis();
 
         for (int i = 0; i < 1000; i++) {
-            new Thread(task).start(); //Creación de 1000 hilos para ejecutar la tarea
+            executor.execute(() -> {
+                for (int j = 0; j < 1000; j++) {
+                    counter.incrementSynchronized();
+                }
+            });
         }
 
-        //Tiempo para que el hilo termine su ejecución
-        System.out.println("Tiempo para que el hilo termine su ejecución " + System.currentTimeMillis());
+        executor.shutdown();
+        executor.awaitTermination(1, TimeUnit.MINUTES);
 
-        System.out.println(counter.getCount());
+        long fin = System.currentTimeMillis();
+
+        System.out.println("Tiempo: " + (fin - inicio) + "ms");
+
+        System.out.println("Valor final: " + counter.getCountSynchronized());
     }
 }
